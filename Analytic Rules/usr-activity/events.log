@@ -1,0 +1,9 @@
+node=ubuntu type=PATH msg=audit(1748336982.416:12702724): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=791476 dev=08:05 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+node=ubuntu type=PATH msg=audit(1748336982.416:12702724): item=0 name="/usr/sbin/useradd" inode=791604 dev=08:05 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+node=ubuntu type=EXECVE msg=audit(1748336982.416:12702724): argc=2 a0="useradd" a1="ttestt"
+node=ubuntu type=SYSCALL msg=audit(1748336982.416:12702724): arch=c000003e syscall=59 success=yes exit=0 a0=55cf818a2238 a1=55cf818aabd8 a2=55cf8189d780 a3=0 items=2 ppid=266725 pid=266726 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=3 comm="useradd" exe="/usr/sbin/useradd" subj=unconfined key="user_mgmt_useradd"
+
+node=ubuntu type=PATH msg=audit(1748337648.686:12702815): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=791476 dev=08:05 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+node=ubuntu type=PATH msg=audit(1748337648.686:12702815): item=0 name="/usr/bin/passwd" inode=791588 dev=08:05 mode=0104755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+node=ubuntu type=EXECVE msg=audit(1748337648.686:12702815): argc=2 a0="passwd" a1="ttestt"
+node=ubuntu type=SYSCALL msg=audit(1748337648.686:12702815): arch=c000003e syscall=59 success=yes exit=0 a0=55b47b2ef7a8 a1=55b47b2f7bd8 a2=55b47b2ea780 a3=0 items=2 ppid=266756 pid=266757 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=3 comm="passwd" exe="/usr/bin/passwd" subj=unconfined key="identity_passwd_exec"
