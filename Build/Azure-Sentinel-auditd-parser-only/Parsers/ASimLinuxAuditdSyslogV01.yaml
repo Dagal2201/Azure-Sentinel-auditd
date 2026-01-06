@@ -1,9 +1,9 @@
 Parser:
   Title: Auditd Syslog ASIM parser for Linux
   Version: 0.1.0
-  LastUpdated: Jan 06 2026
+  LastUpdated: Jan 06, 2026
 Product:
-  Name: LinuxAuditdSyslog
+  Name: AzureSentinelauditd
 Normalization:
   Schema: AuditEvent
   Version: 0.1.3
@@ -20,7 +20,8 @@ ParserParams:
 - Name: disabled
   Type: bool
   Default: false
-ParserQuery: "let SyslogTag='audispd';\nlet parser = (disabled:bool=false) { \nlet EventData
+ParserQuery: | 
+  "let SyslogTag='audispd';\nlet parser = (disabled:bool=false) { \nlet EventData
   = Syslog\n    | where not(disabled)\n    | where ProcessName == SyslogTag\n    |
   extend node = extract(@\"^node=(.+?)\\s\",1,SyslogMessage)\n    | extend type =
   extract(@\"type=(.+?)\\s\",1,SyslogMessage)\n    | extend key = extract(@\"key=\"\
