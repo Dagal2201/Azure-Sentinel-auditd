@@ -20,8 +20,7 @@ ParserParams:
 - Name: disabled
   Type: bool
   Default: false
-ParserQuery:
-query: "let SyslogTag='audispd';\nlet parser = (disabled:bool=false) { \nlet EventData
+ParserQuery: "let SyslogTag='audispd';\nlet parser = (disabled:bool=false) { \nlet EventData
   = Syslog\n    | where not(disabled)\n    | where ProcessName == SyslogTag\n    |
   extend node = extract(@\"^node=(.+?)\\s\",1,SyslogMessage)\n    | extend type =
   extract(@\"type=(.+?)\\s\",1,SyslogMessage)\n    | extend key = extract(@\"key=\"\
