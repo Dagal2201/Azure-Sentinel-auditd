@@ -1,0 +1,13 @@
+{
+    "Name": "Azure-Sentinel-auditd",
+    "Author": "Alexy keulich - akeulich@outlook.com",
+    "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/Azure-Sentinel-auditd.svg\" width=\"75px\" height=\"75px\">",
+    "Description": "Azure-Sentinel-auditd Solution for MS Sentinel",
+    "Analytic Rules": [
+        "Analytic Rules/auditd_user_has_been_added_but_the_password_has_not_been_set.yaml"
+    ],
+    "BasePath": "D:\\.SIEM\\MS Sentinel\\Solutions\\Azure-Sentinel-auditd-localgithub-testing\\Azure-Sentinel-auditd\\Azure-Sentinel-auditd",
+    "Version": "1.0.0",
+    "Metadata": "SolutionMetadata.json",
+    "TemplateSpec": true
+}

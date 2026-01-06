@@ -1,0 +1,20 @@
+{
+    "PublisherId": "azuresentinel",
+    "offerId": "azure-sentinel-auditd",
+    "firstPublishDate": "2026-01-06",
+    "lastPublishDate": "2026-01-06",
+    "providers": [
+        "Linux"
+    ],
+    "categories": {
+        "domains": [
+            "Security - Others"
+        ]
+    },
+    "support": {
+        "name": "Alexy keulich",
+        "email": "akeulich@outlook.com",
+        "tier": "Partner",
+        "link": "https://github.com/Dagal2201/Azure-Sentinel-auditd"
+    }
+}
