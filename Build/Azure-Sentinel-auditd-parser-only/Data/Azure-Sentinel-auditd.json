@@ -1,12 +1,12 @@
 {
     "Name": "Azure-Sentinel-auditd",
     "Author": "Alexy Keulich - akeulich@outlook.com",
-    "Logo": "<img src=\"https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd/Logo/logo.svg\" width=\"75px\" height=\"75px\">",
+    "Logo": "<img src=\"https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd-parser-only/Logo/logo.svg\" width=\"75px\" height=\"75px\">",
     "Description": "Azure-Sentinel-auditd Solution for MS Sentinel",
     "Parsers": [
         "Parsers/ASimLinuxAuditdSyslogV01.yaml"
     ],
-    "BasePath": "https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd",
+    "BasePath": "https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd-parser-only",
     "Version": "1.0.0",
     "Metadata": "SolutionMetadata.json",
     "TemplateSpec": true
