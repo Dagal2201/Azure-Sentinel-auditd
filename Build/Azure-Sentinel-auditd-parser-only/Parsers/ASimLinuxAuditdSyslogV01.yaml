@@ -1,0 +1,95 @@
+Parser:
+  Title: Auditd Syslog ASIM parser for Linux
+  Version: 0.1.0
+  LastUpdated: Jan 06 2026
+Product:
+  Name: LinuxAuditdSyslog
+Normalization:
+  Schema: AuditEvent
+  Version: 0.1.3
+References:
+- Title: ASIM Audit Event Schema
+  Link: https://aka.ms/ASimAuditEventDoc
+- Title: ASIM
+  Link: https:/aka.ms/AboutASIM
+Description: |
+  This ASIM parser supports normalizing the Linux Syslog logs to the ASIM Audit Event normalized schema.
+ParserName: ASimLinuxAuditdSyslogV01
+EquivalentBuiltInParser: _ASim_AuditEvent
+ParserParams:
+- Name: disabled
+  Type: bool
+  Default: false
+ParserQuery:
+query: "let SyslogTag='audispd';\nlet parser = (disabled:bool=false) { \nlet EventData
+  = Syslog\n    | where not(disabled)\n    | where ProcessName == SyslogTag\n    |
+  extend node = extract(@\"^node=(.+?)\\s\",1,SyslogMessage)\n    | extend type =
+  extract(@\"type=(.+?)\\s\",1,SyslogMessage)\n    | extend key = extract(@\"key=\"\
+  \"(.+?)\"\"\",1,SyslogMessage)\n    | extend success = extract(@\"success=(.+?)\\\
+  s\",1,SyslogMessage)\n    | extend EventType = 'Other',\n             AuditdType
+  = type,\n             EventVendor = 'Linux',\n             EventProduct = 'Auditd',\n\
+  \             EventSchema = 'AuditEvent',\n             EventSchemaVersion = '0.1',\n\
+  \             EventCount = int(1),\n             EventStartTime = TimeGenerated,\n\
+  \             EventEndTime = TimeGenerated,\n             Dvc = iif(isnotempty(node),node,tostring(split(_ResourceId,\"\
+  /\")[-1])),\n             EventResult = success,\n             Object = extract(@'name=\"\
+  (.+?)\"\\s',1,SyslogMessage),\n             ObjectType = 'Other'\n    | extend Operation
+  = EventType\n    | parse SyslogMessage with \"type=\" type \" msg=\" msg\n    |
+  extend auditEventTimestamp = extract(@\"audit\\((.+?)\\:(.+?)\\)\",1,SyslogMessage)\n\
+  \    | extend auditEventId = extract(@\"audit\\((.+?)\\:(.+?)\\)\",2,SyslogMessage)\n\
+  \    | extend argList = extract_all(@\"a\\d{1,2}=\"\"?([^\\s\"\"]+)\"\"?\", SyslogMessage)\n\
+  \    | extend argcLong = tolong(array_length(argList))\n    | extend a0 = iif(argcLong
+  > 0, argList[0], ''),\n             a1 = iif(argcLong > 1, argList[1], ''),\n  \
+  \           a2 = iif(argcLong > 2, argList[2], ''),\n             a3 = iif(argcLong
+  > 3, argList[3], ''),\n             a4 = iif(argcLong > 4, argList[4], ''),\n  \
+  \           a5 = iif(argcLong > 5, argList[5], ''),\n             a6 = iif(argcLong
+  > 6, argList[6], ''),\n             a7 = iif(argcLong > 7, argList[7], ''),\n  \
+  \           a8 = iif(argcLong > 8, argList[8], ''),\n             a9 = iif(argcLong
+  > 9, argList[9], ''),\n             a10 = iif(argcLong > 10, argList[10], ''),\n\
+  \             a11 = iif(argcLong > 11, argList[11], ''),\n             a12 = iif(argcLong
+  > 12, argList[12], ''),\n             a13 = iif(argcLong > 13, argList[13], ''),\n\
+  \             a14 = iif(argcLong > 14, argList[14], ''),\n             a15 = iif(argcLong
+  > 15, argList[15], ''),\n             a16 = iif(argcLong > 16, argList[16], ''),\n\
+  \             a17 = iif(argcLong > 17, argList[17], ''),\n             a18 = iif(argcLong
+  > 18, argList[18], ''),\n             a19 = iif(argcLong > 19, argList[19], ''),\n\
+  \             a20 = iif(argcLong > 20, argList[20], '')\n    | extend allArgs =
+  strcat_array(argList, \" \")\n    | project-reorder\n    | project-away node, type,
+  argList, argcLong;\nlet EXECVE = EventData // EXECVE\n    | where AuditdType ==
+  'EXECVE'\n    | parse msg with * \"argc=\" argc \" \" args\n    | project-reorder;\n\
+  let PATH = EventData // PATH\n    | where AuditdType == 'PATH'\n    | parse msg
+  with * \"item=\" item \"name=\\\"\" name \"\\\" inode=\" inode \"dev=\" dev \"mode=\"\
+  \ mode \"ouid=\" ouid \"ogid=\" ogid \"rdev=\" rdev \"nametype=\" nametype \"cap_fp=\"\
+  \ cap_fp \"cap_fi=\" cap_fi \"cap_fe=\" cap_fe \"cap_fver=\" cap_fver \"cap_frootid=\"\
+  \ cap_frootid \"OUID=\\\"\" OUID \"\\\" OGID=\\\"\" OGID \"\\\"\";\nlet SYSCALL
+  = EventData // SYSCALL\n    | where AuditdType == 'SYSCALL'\n    | extend arch =
+  extract(@\"arch=([^\\s]+)\", 1, SyslogMessage),\n        syscall = extract(@\"syscall=([^\\\
+  s]+)\", 1, SyslogMessage),\n        exit = extract(@\"exit=([^\\s]+)\", 1, SyslogMessage),\n\
+  \        items = extract(@\"items=([^\\s]+)\", 1, SyslogMessage),\n        ppid
+  = extract(@\"ppid=([^\\s]+)\", 1, SyslogMessage),\n        pid = extract(@\"pid=([^\\\
+  s]+)\", 1, SyslogMessage),\n        auid = extract(@\"auid=([^\\s]+)\", 1, SyslogMessage),\n\
+  \        uid = extract(@\"uid=([^\\s]+)\", 1, SyslogMessage),\n        gid = extract(@\"\
+  gid=([^\\s]+)\", 1, SyslogMessage),\n        euid = extract(@\"euid=([^\\s]+)\"\
+  , 1, SyslogMessage),\n        suid = extract(@\"suid=([^\\s]+)\", 1, SyslogMessage),\n\
+  \        fsuid = extract(@\"fsuid=([^\\s]+)\", 1, SyslogMessage),\n        egid
+  = extract(@\"egid=([^\\s]+)\", 1, SyslogMessage),\n        sgid = extract(@\"sgid=([^\\\
+  s]+)\", 1, SyslogMessage),\n        fsgid = extract(@\"fsgid=([^\\s]+)\", 1, SyslogMessage),\n\
+  \        tty = extract(@\"tty=([^\\s]+)\", 1, SyslogMessage),\n        ses = extract(@\"\
+  ses=([^\\s]+)\", 1, SyslogMessage),\n        comm = extract(@\"comm=\"\"([^\\s]+)\"\
+  \"\", 1, SyslogMessage),\n        exe = extract(@\"exe=\"\"([^\\s]+)\"\"\", 1, SyslogMessage),\n\
+  \        subj = extract(@\"subj=([^\\s]+)\", 1, SyslogMessage),\n        ARCH =
+  extract(@\"ARCH=([^\\s]+)\", 1, SyslogMessage),\n        SYSCALL = extract(@\"SYSCALL=([^\\\
+  s]+)\", 1, SyslogMessage),\n        AUID = extract(@\"AUID=\"\"?([^\\s\"\"]+)\"\"\
+  ?\", 1, SyslogMessage),\n        UID = extract(@\"UID=\"\"?([^\\s\"\"]+)\"\"?\"\
+  , 1, SyslogMessage),\n        GID = extract(@\"GID=\"\"?([^\\s\"\"]+)\"\"?\", 1,
+  SyslogMessage),\n        EUID = extract(@\"EUID=\"\"?([^\\s\"\"]+)\"\"?\", 1, SyslogMessage),\n\
+  \        EGID = extract(@\"EGID=\"\"?([^\\s\"\"]+)\"\"?\", 1, SyslogMessage);\n\
+  let CWD = EventData // CWD\n    | where AuditdType == \"CWD\"\n    | parse msg with
+  * \"cwd=\" cwd;\nlet PROCTITLE = EventData // PROCTITLE\n    | where AuditdType
+  == \"PROCTITLE\"\n    | parse msg with * \"proctitle=\" HexCmd\n    | extend prettyHexCmd
+  = replace_regex(HexCmd, @\"(.{2})\",@\"\\1 \")\n    | mv-apply numAsString = split(prettyHexCmd,
+  \" \") on (\n        summarize clearCmd = make_string(make_list(tolong(strcat(\"\
+  0x\", numAsString))))\n        );\nlet SOCKADDR = EventData // SOCKADDR\n    | where
+  AuditdType == \"SOCKADDR\"\n    | parse msg with * \"saddr=\" saddr \"saddr_fam=\"\
+  \ saddrfam \"nlnk-fam=\" nlnkfam \"nlnk-pid=\" nlnkpid;\nlet KERNMODULE = EventData
+  // KERN_MODULE\n    | where AuditdType == \"KERN_MODULE\"\n    | extend kernName
+  = extract(@\"name=\"\"(.+?)\"\"\", 1, SyslogMessage);\nunion isfuzzy=true EXECVE,
+  PATH, SYSCALL, CWD, PROCTITLE, SOCKADDR, KERNMODULE\n};\nparser(disabled=disabled)"

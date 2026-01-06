@@ -1,0 +1,1 @@
+do not send events from events.log with passwd after creating user 

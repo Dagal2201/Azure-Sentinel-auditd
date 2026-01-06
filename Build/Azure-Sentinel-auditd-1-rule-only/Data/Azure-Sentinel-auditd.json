@@ -1,12 +1,12 @@
 {
     "Name": "Azure-Sentinel-auditd",
-    "Author": "Alexy keulich - akeulich@outlook.com",
+    "Author": "Alexy Keulich - akeulich@outlook.com",
     "Logo": "<img src=\"https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd/Logo/logo.svg\" width=\"75px\" height=\"75px\">",
     "Description": "Azure-Sentinel-auditd Solution for MS Sentinel",
     "Analytic Rules": [
         "Analytic Rules/auditd_user_has_been_added_but_the_password_has_not_been_set.yaml"
     ],
-    "BasePath": "https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd/",
+    "BasePath": "https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-auditd",
     "Version": "1.0.0",
     "Metadata": "SolutionMetadata.json",
     "TemplateSpec": true

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "author": "Alexy keulich - akeulich@outlook.com",
+    "comments": "Solution template for Azure-Sentinel-auditd"
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Not used, but needed to pass arm-ttk test `Location-Should-Not-Be-Hardcoded`.  We instead use the `workspace-location` which is derived from the LA workspace"
+      }
+    },
+    "workspace-location": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "[concat('Region to deploy solution resources -- separate from location selection',parameters('location'))]"
+      }
+    },
+    "workspace": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Workspace name for Log Analytics where Microsoft Sentinel is setup"
+      }
+    },
+    "analytic1-id": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "minLength": 1,
+      "metadata": {
+        "description": "Unique id for the scheduled alert rule"
+      }
+    }
+  },
+  "variables": {
+    "auditd_user_has_been_added_but_the_password_has_not_been_set_AnalyticalRules": "auditd_user_has_been_added_but_the_password_has_not_been_set_AnalyticalRules",
+    "_auditd_user_has_been_added_but_the_password_has_not_been_set_AnalyticalRules": "[variables('auditd_user_has_been_added_but_the_password_has_not_been_set_AnalyticalRules')]",
+    "sourceId": "azuresentinel.azure-sentinel-auditd",
+    "_sourceId": "[variables('sourceId')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/',parameters('analytic1-id'))]",
+      "apiVersion": "2021-03-01-preview",
+      "kind": "Scheduled",
+      "location": "[parameters('workspace-location')]",
+      "properties": {
+        "description": "Identifies when a user is added but the password has not been set within a specified time range.\n  To enable this rule, the following AuditD rules must be applied:\n    -w /usr/sbin/useradd -p x -k user_mgmt_useradd\n    -w /usr/sbin/adduser -p x -k user_mgmt_adduser\n    -w /usr/bin/passwd -p x -k identity_passwd_exec",
+        "displayName": "AuditD - User has been added, but the password has not been set",
+        "enabled": false,
+        "query": "let userAddKeys = dynamic([\"user_mgmt_useradd\", \"user_mgmt_adduser\"]);\nlet passwordChangeKeys = dynamic([\"identity_passwd_exec\"]);\n// getting user addition events\nlet auditEventIds = ASim_LinuxAuditdSyslog_V01(disabled=false)\n    | where key in (userAddKeys)\n    | project auditEventId;\nlet auditEvents = ASim_LinuxAuditdSyslog_V01(disabled=false)\n    | where auditEventId in (auditEventIds);\n// filtering user addition events and gathering usernames\nlet UserAdditionEventsFiltered = auditEvents\n    | where AuditdType == 'EXECVE' and (a0 == 'adduser' or a0 == 'useradd')\n    | extend addedUser = tostring(split(allArgs, \" \")[-1])\n    | project\n        CreatedAt = TimeGenerated,\n        addedUser,\n        Dvc,\n        auditEventId,\n        SyslogMessage;\n// getting passwd events\nlet UserChangePasswdIds = ASim_LinuxAuditdSyslog_V01(disabled=false)\n    | where key in (passwordChangeKeys)\n    | project auditEventId;\nlet UserChangePasswdEvents = ASim_LinuxAuditdSyslog_V01(disabled=false)\n    | where auditEventId in (UserChangePasswdIds);\n// filtering passwd events and gathering usernames\nlet UserChangePasswdEventsFiltered = UserChangePasswdEvents\n    | where AuditdType == \"EXECVE\" and a0 in ('passwd')\n    | extend modUser = tostring(split(allArgs, \" \")[-1])\n    | where modUser != 'passwd' or isnotempty(modUser)\n    | project ModifiedAt=TimeGenerated, modUser, Dvc, auditEventId;\n// looking for users without changed password\n// Alert if 'ModifyAuditEventId' and 'ModifiedAt' is empty. They should be empty\nUserAdditionEventsFiltered\n    | join kind=leftouter (UserChangePasswdEventsFiltered) on $left.addedUser == $right.modUser and $left.Dvc == $right.Dvc\n    | where isnull(ModifiedAt)\n    | project Dvc, \n        Username=addedUser, \n        CreatedAt, \n        CreateAuditEventId=auditEventId,\n        ModifiedAt,\n        ModifyAuditEventId=auditEventId",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "severity": "Medium",
+        "suppressionDuration": "PT1H",
+        "suppressionEnabled": false,
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Persistence",
+          "DefenseEvasion",
+          "CredentailAccess"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Dvc"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Username"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+      "apiVersion": "2021-03-01-preview",
+      "properties": {
+        "version": "1.0.0",
+        "kind": "Solution",
+        "contentId": "[variables('_sourceId')]",
+        "parentId": "[variables('_sourceId')]",
+        "source": {
+          "kind": "Solution",
+          "name": "Azure-Sentinel-auditd",
+          "sourceId": "[variables('_sourceId')]"
+        },
+        "author": {
+          "name": "Alexy keulich",
+          "email": "akeulich@outlook.com"
+        },
+        "support": {
+          "name": "Alexy keulich",
+          "email": "akeulich@outlook.com",
+          "tier": "Partner",
+          "link": "https://github.com/Dagal2201/Azure-Sentinel-auditd"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "AnalyticsRule",
+              "contentId": "[variables('_auditd_user_has_been_added_but_the_password_has_not_been_set_AnalyticalRules')]",
+              "version": "1.0.0"
+            }
+          ]
+        },
+        "firstPublishDate": "2026-01-06",
+        "lastPublishDate": "2026-01-06",
+        "providers": [
+          "Linux"
+        ],
+        "categories": {
+          "domains": [
+            "Security - Others"
+          ]
+        }
+      },
+      "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', variables('_sourceId'))]"
+    }
+  ],
+  "outputs": {}
+}

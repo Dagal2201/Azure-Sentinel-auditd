@@ -1,0 +1,39 @@
+id:
+name: AuditD - User has been added, but the password has not been set
+description: |
+  'Identifies when a user is added but the password has not been set within a specified time range.
+    To enable this rule, the following AuditD rules must be applied:
+      -w /usr/sbin/useradd -p x -k user_mgmt_useradd
+      -w /usr/sbin/adduser -p x -k user_mgmt_adduser
+      -w /usr/bin/passwd -p x -k identity_passwd_exec'
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: AuditDSyslog
+    dataTypes:
+      - Syslog
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Persistence
+  - DefenseEvasion
+  - CredentailAccess
+relevantTechniques:
+  - T1136.001
+  - T1136.002
+  - T1078
+query: |
+  PUT-QUERY-HERE
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: Dvc
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: Username
+version: 1.0.0
+kind: Scheduled

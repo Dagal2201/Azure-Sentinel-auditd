@@ -1,0 +1,107 @@
+let SyslogTag='audispd';
+let parser = (disabled:bool=false) { 
+let EventData = Syslog
+    | where not(disabled)
+    | where ProcessName == SyslogTag
+    | extend node = extract(@"^node=(.+?)\s",1,SyslogMessage)
+    | extend type = extract(@"type=(.+?)\s",1,SyslogMessage)
+    | extend key = extract(@"key=""(.+?)""",1,SyslogMessage)
+    | extend success = extract(@"success=(.+?)\s",1,SyslogMessage)
+    | extend EventType = 'Other',
+             AuditdType = type,
+             EventVendor = 'Linux',
+             EventProduct = 'Auditd',
+             EventSchema = 'AuditEvent',
+             EventSchemaVersion = '0.1',
+             EventCount = int(1),
+             EventStartTime = TimeGenerated,
+             EventEndTime = TimeGenerated,
+             Dvc = iif(isnotempty(node),node,tostring(split(_ResourceId,"/")[-1])),
+             EventResult = success,
+             Object = extract(@'name="(.+?)"\s',1,SyslogMessage),
+             ObjectType = 'Other'
+    | extend Operation = EventType
+    | parse SyslogMessage with "type=" type " msg=" msg
+    | extend auditEventTimestamp = extract(@"audit\((.+?)\:(.+?)\)",1,SyslogMessage)
+    | extend auditEventId = extract(@"audit\((.+?)\:(.+?)\)",2,SyslogMessage)
+    | extend argList = extract_all(@"a\d{1,2}=""?([^\s""]+)""?", SyslogMessage)
+    | extend argcLong = tolong(array_length(argList))
+    | extend a0 = iif(argcLong > 0, argList[0], ''),
+             a1 = iif(argcLong > 1, argList[1], ''),
+             a2 = iif(argcLong > 2, argList[2], ''),
+             a3 = iif(argcLong > 3, argList[3], ''),
+             a4 = iif(argcLong > 4, argList[4], ''),
+             a5 = iif(argcLong > 5, argList[5], ''),
+             a6 = iif(argcLong > 6, argList[6], ''),
+             a7 = iif(argcLong > 7, argList[7], ''),
+             a8 = iif(argcLong > 8, argList[8], ''),
+             a9 = iif(argcLong > 9, argList[9], ''),
+             a10 = iif(argcLong > 10, argList[10], ''),
+             a11 = iif(argcLong > 11, argList[11], ''),
+             a12 = iif(argcLong > 12, argList[12], ''),
+             a13 = iif(argcLong > 13, argList[13], ''),
+             a14 = iif(argcLong > 14, argList[14], ''),
+             a15 = iif(argcLong > 15, argList[15], ''),
+             a16 = iif(argcLong > 16, argList[16], ''),
+             a17 = iif(argcLong > 17, argList[17], ''),
+             a18 = iif(argcLong > 18, argList[18], ''),
+             a19 = iif(argcLong > 19, argList[19], ''),
+             a20 = iif(argcLong > 20, argList[20], '')
+    | extend allArgs = strcat_array(argList, " ")
+    | project-reorder
+    | project-away node, type, argList, argcLong;
+let EXECVE = EventData // EXECVE
+    | where AuditdType == 'EXECVE'
+    | parse msg with * "argc=" argc " " args
+    | project-reorder;
+let PATH = EventData // PATH
+    | where AuditdType == 'PATH'
+    | parse msg with * "item=" item "name=\"" name "\" inode=" inode "dev=" dev "mode=" mode "ouid=" ouid "ogid=" ogid "rdev=" rdev "nametype=" nametype "cap_fp=" cap_fp "cap_fi=" cap_fi "cap_fe=" cap_fe "cap_fver=" cap_fver "cap_frootid=" cap_frootid "OUID=\"" OUID "\" OGID=\"" OGID "\"";
+let SYSCALL = EventData // SYSCALL
+    | where AuditdType == 'SYSCALL'
+    | extend arch = extract(@"arch=([^\s]+)", 1, SyslogMessage),
+        syscall = extract(@"syscall=([^\s]+)", 1, SyslogMessage),
+        exit = extract(@"exit=([^\s]+)", 1, SyslogMessage),
+        items = extract(@"items=([^\s]+)", 1, SyslogMessage),
+        ppid = extract(@"ppid=([^\s]+)", 1, SyslogMessage),
+        pid = extract(@"pid=([^\s]+)", 1, SyslogMessage),
+        auid = extract(@"auid=([^\s]+)", 1, SyslogMessage),
+        uid = extract(@"uid=([^\s]+)", 1, SyslogMessage),
+        gid = extract(@"gid=([^\s]+)", 1, SyslogMessage),
+        euid = extract(@"euid=([^\s]+)", 1, SyslogMessage),
+        suid = extract(@"suid=([^\s]+)", 1, SyslogMessage),
+        fsuid = extract(@"fsuid=([^\s]+)", 1, SyslogMessage),
+        egid = extract(@"egid=([^\s]+)", 1, SyslogMessage),
+        sgid = extract(@"sgid=([^\s]+)", 1, SyslogMessage),
+        fsgid = extract(@"fsgid=([^\s]+)", 1, SyslogMessage),
+        tty = extract(@"tty=([^\s]+)", 1, SyslogMessage),
+        ses = extract(@"ses=([^\s]+)", 1, SyslogMessage),
+        comm = extract(@"comm=""([^\s]+)""", 1, SyslogMessage),
+        exe = extract(@"exe=""([^\s]+)""", 1, SyslogMessage),
+        subj = extract(@"subj=([^\s]+)", 1, SyslogMessage),
+        ARCH = extract(@"ARCH=([^\s]+)", 1, SyslogMessage),
+        SYSCALL = extract(@"SYSCALL=([^\s]+)", 1, SyslogMessage),
+        AUID = extract(@"AUID=""?([^\s""]+)""?", 1, SyslogMessage),
+        UID = extract(@"UID=""?([^\s""]+)""?", 1, SyslogMessage),
+        GID = extract(@"GID=""?([^\s""]+)""?", 1, SyslogMessage),
+        EUID = extract(@"EUID=""?([^\s""]+)""?", 1, SyslogMessage),
+        EGID = extract(@"EGID=""?([^\s""]+)""?", 1, SyslogMessage);
+let CWD = EventData // CWD
+    | where AuditdType == "CWD"
+    | parse msg with * "cwd=" cwd;
+let PROCTITLE = EventData // PROCTITLE
+    | where AuditdType == "PROCTITLE"
+    | parse msg with * "proctitle=" HexCmd
+    | extend prettyHexCmd = replace_regex(HexCmd, @"(.{2})",@"\1 ")
+    | mv-apply numAsString = split(prettyHexCmd, " ") on (
+        summarize clearCmd = make_string(make_list(tolong(strcat("0x", numAsString))))
+        );
+let SOCKADDR = EventData // SOCKADDR
+    | where AuditdType == "SOCKADDR"
+    | parse msg with * "saddr=" saddr "saddr_fam=" saddrfam "nlnk-fam=" nlnkfam "nlnk-pid=" nlnkpid;
+let KERNMODULE = EventData // KERN_MODULE
+    | where AuditdType == "KERN_MODULE"
+    | extend kernName = extract(@"name=""(.+?)""", 1, SyslogMessage);
+union isfuzzy=true EXECVE, PATH, SYSCALL, CWD, PROCTITLE, SOCKADDR, KERNMODULE
+};
+parser(disabled=disabled)

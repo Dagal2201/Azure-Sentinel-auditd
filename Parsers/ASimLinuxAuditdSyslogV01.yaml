@@ -1,0 +1,23 @@
+Parser:
+  Title: Auditd Syslog ASIM parser for Linux
+  Version: '0.1.0'
+  LastUpdated: 
+Product:
+  Name: LinuxAuditdSyslog
+Normalization:
+  Schema: AuditEvent
+  Version: '0.1.3'
+References:
+- Title: ASIM Audit Event Schema
+  Link: https://aka.ms/ASimAuditEventDoc
+- Title: ASIM
+  Link: https:/aka.ms/AboutASIM
+Description: |
+  This ASIM parser supports normalizing the Linux Syslog logs to the ASIM Audit Event normalized schema.
+ParserName: ASimLinuxAuditdSyslogV01
+EquivalentBuiltInParser: _ASim_AuditEvent
+ParserParams:
+  - Name: disabled
+    Type: bool
+    Default: false
+ParserQuery:

@@ -1,0 +1,41 @@
+let userAddKeys = dynamic(["user_mgmt_useradd", "user_mgmt_adduser"]);
+let passwordChangeKeys = dynamic(["identity_passwd_exec"]);
+// getting user addition events
+let auditEventIds = ASim_LinuxAuditdSyslog_V01(disabled=false)
+    | where key in (userAddKeys)
+    | project auditEventId;
+let auditEvents = ASim_LinuxAuditdSyslog_V01(disabled=false)
+    | where auditEventId in (auditEventIds);
+// filtering user addition events and gathering usernames
+let UserAdditionEventsFiltered = auditEvents
+    | where AuditdType == 'EXECVE' and (a0 == 'adduser' or a0 == 'useradd')
+    | extend addedUser = tostring(split(allArgs, " ")[-1])
+    | project
+        CreatedAt = TimeGenerated,
+        addedUser,
+        Dvc,
+        auditEventId,
+        SyslogMessage;
+// getting passwd events
+let UserChangePasswdIds = ASim_LinuxAuditdSyslog_V01(disabled=false)
+    | where key in (passwordChangeKeys)
+    | project auditEventId;
+let UserChangePasswdEvents = ASim_LinuxAuditdSyslog_V01(disabled=false)
+    | where auditEventId in (UserChangePasswdIds);
+// filtering passwd events and gathering usernames
+let UserChangePasswdEventsFiltered = UserChangePasswdEvents
+    | where AuditdType == "EXECVE" and a0 in ('passwd')
+    | extend modUser = tostring(split(allArgs, " ")[-1])
+    | where modUser != 'passwd' or isnotempty(modUser)
+    | project ModifiedAt=TimeGenerated, modUser, Dvc, auditEventId;
+// looking for users without changed password
+// Alert if 'ModifyAuditEventId' and 'ModifiedAt' is empty. They should be empty
+UserAdditionEventsFiltered
+    | join kind=leftouter (UserChangePasswdEventsFiltered) on $left.addedUser == $right.modUser and $left.Dvc == $right.Dvc
+    | where isnull(ModifiedAt)
+    | project Dvc, 
+        Username=addedUser, 
+        CreatedAt, 
+        CreateAuditEventId=auditEventId,
+        ModifiedAt,
+        ModifyAuditEventId=auditEventId
