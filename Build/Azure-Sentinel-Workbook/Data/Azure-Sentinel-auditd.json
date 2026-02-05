@@ -1,0 +1,13 @@
+{
+    "Name": "Azure-Sentinel-auditd",
+    "Author": "Alexy Keulich - akeulich@outlook.com",
+    "Logo": "<img src=\"https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-Workbook/Logo/logo.svg\" width=\"75px\" height=\"75px\">",
+    "Description": "Azure-Sentinel-auditd Solution for MS Sentinel",
+    "Workbooks": [
+        "Workbooks/Auditd.json"
+    ],
+    "BasePath": "https://raw.githubusercontent.com/Dagal2201/Azure-Sentinel-auditd/refs/heads/main/Build/Azure-Sentinel-Workbook",
+    "Version": "1.0.0",
+    "Metadata": "SolutionMetadata.json",
+    "TemplateSpec": true
+}

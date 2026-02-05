@@ -1,0 +1,64 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Auditd Overview (Past 24h)\nDisplays total number of auditd events collected in the last 24 hours.\n\nUse this as a foundation to expand into deeper dashboards (e.g., event types, user activity, authentication trends, etc.)."
+      },
+      "name": "text - header"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "e7e1306b-dac4-4193-aff1-eb1e95376a86",
+            "version": "KqlParameterItem/1.0",
+            "name": "processParam",
+            "label": "Syslog tag that contains auditd data",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "let CustomValue = datatable(ProcessName:string) [\"audispd\"];\r\nunion CustomValue,\r\n(\r\n    Syslog\r\n    | summarize by tostring(ProcessName)\r\n)\r\n| distinct ProcessName\r\n| order by ProcessName asc\r\n",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "audipsd"
+            ]
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "Choose ProcessName that contains Auditd logs"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Syslog\n| where TimeGenerated >= ago(24h)\n| where ProcessName in ({processParam})\n| summarize EventCount = count() by ProcessName\n| order by EventCount desc",
+        "size": 1,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table"
+      },
+      "name": "Auditd Events by Selected Processes"
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/5d18eaaa-29ef-42f3-b396-a3ef45d14d10/resourcegroups/sentinel-rg/providers/microsoft.operationalinsights/workspaces/sentinel-law"
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
